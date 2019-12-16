@@ -22,7 +22,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       msg: `[${request.method} ${request.url}] ${
         exception.response
           ? exception.response.error
-          : JSON.stringify(exception.errors)
+          : exception.errors
+          ? JSON.stringify(exception.errors)
+          : exception.toString()
       }`,
     });
   }
