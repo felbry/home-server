@@ -1,9 +1,7 @@
 import { Artical } from '../artical.interface';
-export class ReqGetArticals {
-  page: number;
-  pageSize: number;
-}
-export class ResGetArticals {
-  total: number;
+import { Pagination } from '../../pagination.interface';
+import { Total } from '../../total.interface';
+export class ReqGetArticals extends Pagination {}
+export class ResGetArticals extends Total {
   articalList: Artical[];
 }

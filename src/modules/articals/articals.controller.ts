@@ -1,4 +1,24 @@
 const fs = require('fs');
+const hljs = require('highlight.js')
+const markdownItTocAndAnchor = require('markdown-it-toc-and-anchor').default
+const mdIt = require('markdown-it')
+const md = new mdIt({
+  html: true,
+  highlight: function (str, lang) {
+    if (lang && hljs.getLanguage(lang)) {
+      return hljs.highlight(lang, str).value
+    }
+    return '' // use external default escaping
+  }
+})
+  .use(
+    markdownItTocAndAnchor,
+    {
+      anchorLink: false,
+      tocLastLevel: 3
+    }
+  )
+  .use(require('markdown-it-footnote'))
 import { Model } from 'mongoose';
 import {
   Controller,
@@ -8,6 +28,7 @@ import {
   Request,
   Get,
   Post,
+  Param,
   Body,
   Query,
 } from '@nestjs/common';
@@ -18,6 +39,7 @@ import { Afile } from '../afiles/afile.interface';
 import { MulterFile } from '../multer-file.interface';
 import ReqPostArticals from './dto/req-post-articals.dto';
 import { ReqGetArticals, ResGetArticals } from './dto/get-articals.dto';
+import { ReqGetArticalsById } from './dto/get-articals-by-id.dto';
 import getFileMd5 from '../../utils/get-file-md5';
 
 @Injectable()
@@ -48,6 +70,27 @@ export class ArticalsController {
           total,
         } as ResGetArticals),
     );
+  }
+
+  @Get(':id')
+  async getArticalsById(@Param() params, @Query() query: ReqGetArticalsById) {
+    return this.articalModel
+      .findById(params.id)
+      .populate('author', 'gender nickName')
+      .populate('file', 'publicPath')
+      .then((articalRet: Artical) => {
+        articalRet.content = fs.readFileSync(process.cwd() + articalRet.file.publicPath, 'utf-8')
+        if (query.isOrigin) {
+          return articalRet
+        }
+        md.set({
+          tocCallback: function (tocMarkdown, tocArray, tocHtml) {
+            // console.log(tocHtml)
+          }
+        })
+        retObj.content = md.render(content, { encoding: 'utf-8' })
+        return retObj
+      })
   }
 
   @Post()
