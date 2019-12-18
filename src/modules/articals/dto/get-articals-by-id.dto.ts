@@ -1,7 +1,8 @@
-import { BaseAndTimestamp } from '../../base.interface';
+import { Artical } from '../../articals/artical.interface';
+
 export class ReqGetArticalsById {
-  isOrigin: boolean;
+  isOrigin?: boolean;
 }
-export class ResGetArticalsById extends BaseAndTimestamp {
-  articalList: Artical[];
+export class ResGetArticalsById extends Artical {
+  content: string;
 }

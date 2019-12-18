@@ -4,8 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 const jwt = require('jsonwebtoken');
 
 import { User } from './user.interface';
-import ReqLogin from './dto/req-login.dto';
-import ResLogin from './dto/res-login.dto';
+import { ReqLogin, ResLogin } from './dto/login.dto';
 import { secretKey } from 'src/config';
 
 @Injectable()

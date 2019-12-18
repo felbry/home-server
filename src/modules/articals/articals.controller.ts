@@ -28,6 +28,7 @@ import {
   Request,
   Get,
   Post,
+  Put,
   Param,
   Body,
   Query,
@@ -37,9 +38,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Artical } from './artical.interface';
 import { Afile } from '../afiles/afile.interface';
 import { MulterFile } from '../multer-file.interface';
-import ReqPostArticals from './dto/req-post-articals.dto';
+import { ReqPostArticals } from './dto/post-articals.dto';
+import { ReqPutArticals } from './dto/put-articals.dto';
 import { ReqGetArticals, ResGetArticals } from './dto/get-articals.dto';
-import { ReqGetArticalsById } from './dto/get-articals-by-id.dto';
+import { ReqGetArticalsById, ResGetArticalsById } from './dto/get-articals-by-id.dto';
 import getFileMd5 from '../../utils/get-file-md5';
 
 @Injectable()
@@ -73,22 +75,26 @@ export class ArticalsController {
   }
 
   @Get(':id')
-  async getArticalsById(@Param() params, @Query() query: ReqGetArticalsById) {
+  async getArticalsById(@Param() params, @Query() query: ReqGetArticalsById): Promise<ResGetArticalsById> {
     return this.articalModel
       .findById(params.id)
       .populate('author', 'gender nickName')
       .populate('file', 'publicPath')
-      .then((articalRet: Artical) => {
-        articalRet.content = fs.readFileSync(process.cwd() + articalRet.file.publicPath, 'utf-8')
+      .then((articalRet: Artical): ResGetArticalsById => {
+        const retObj: ResGetArticalsById = 
+          {
+            content: fs.readFileSync(process.cwd() + articalRet.file.publicPath, 'utf-8'),
+            ...(articalRet as any)._doc
+          }
         if (query.isOrigin) {
-          return articalRet
+          return retObj
         }
         md.set({
           tocCallback: function (tocMarkdown, tocArray, tocHtml) {
             // console.log(tocHtml)
           }
         })
-        retObj.content = md.render(content, { encoding: 'utf-8' })
+        retObj.content = md.render(retObj.content, { encoding: 'utf-8' })
         return retObj
       })
   }
@@ -132,6 +138,48 @@ export class ArticalsController {
             file: fileRet._id,
             author: req.user.uid,
           });
+        },
+      );
+  }
+
+  @Put(':id')
+  @UseInterceptors(FileInterceptor('file'))
+  async updateArticals(
+    @UploadedFile() file: MulterFile,
+    @Param() params,
+    @Body() artical: ReqPutArticals
+  ): Promise<Artical> {
+    let md5: string;
+    return getFileMd5(file.buffer)
+      .then((md5Ret: string): Afile | null => {
+        md5 = md5Ret;
+        return this.fileModel.findOne({
+          md5,
+        });
+      })
+      .then(
+        (fileRet: Afile | null): Afile => {
+          const publicPath: string = `/static/articals/${md5}`;
+          if (fileRet) {
+            return fileRet;
+          }
+          fs.writeFileSync(process.cwd() + publicPath, file.buffer);
+          return this.fileModel.create({
+            mimetype: file.mimetype,
+            size: file.size,
+            encoding: file.encoding,
+            originalName: file.originalname,
+            publicPath,
+            md5,
+          });
+        },
+      )
+      .then(
+        (fileRet: Afile): Artical => {
+          return this.articalModel.findByIdAndUpdate(params.id, {
+            title: artical.title,
+            file: fileRet._id
+          })
         },
       );
   }
