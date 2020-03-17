@@ -8,8 +8,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ArticalsModule } from './modules/articals/articals.module';
 import { UsersModule } from './modules/users/users.module';
 import { AppController } from './app.controller';
-import { AuthMiddleware } from './middlewares/auth.middleware';
-
 @Module({
   imports: [
     MongooseModule.forRoot('mongodb://localhost:27017/nest'),
@@ -18,14 +16,4 @@ import { AuthMiddleware } from './middlewares/auth.middleware';
   ],
   controllers: [AppController],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(AuthMiddleware)
-      .forRoutes(
-        // 'articals',
-        // { path: 'articals', method: RequestMethod.POST },
-        { path: 'articals/:id', method: RequestMethod.PUT }
-      );
-  }
-}
+export class AppModule {}

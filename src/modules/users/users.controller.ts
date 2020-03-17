@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 const jwt = require('jsonwebtoken');
 
 import { User } from './user.interface';
+import { ReqRegistry } from './dto/registry.dto';
 import { ReqLogin, ResLogin } from './dto/login.dto';
 import { secretKey } from 'src/config';
 
@@ -30,6 +31,27 @@ export class UsersController {
           secretKey,
         ),
       } as ResLogin;
+    } else {
+      throw Error('用户名或密码错误');
+    }
+  }
+
+  @Post('registry')
+  async registry(@Body() userInfo: ReqRegistry): Promise<User> {
+    const { password, nickName, username } = userInfo;
+    const userRet: User | null = await this.userModel
+      .findOne({
+        username
+      })
+      .exec();
+    if (userRet) {
+      throw Error('用户已存在')
+    } else {
+      return this.userModel.create({
+        username,
+        password,
+        nickName,
+      });
     }
   }
 }

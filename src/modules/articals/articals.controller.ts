@@ -32,6 +32,7 @@ import {
   Param,
   Body,
   Query,
+  UseGuards
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { InjectModel } from '@nestjs/mongoose';
@@ -42,6 +43,7 @@ import { ReqPostArticals } from './dto/post-articals.dto';
 import { ReqPutArticals } from './dto/put-articals.dto';
 import { ReqGetArticals, ResGetArticals } from './dto/get-articals.dto';
 import { ReqGetArticalsById, ResGetArticalsById } from './dto/get-articals-by-id.dto';
+import { AuthGuard } from '../../guards/auth.guard'
 import getFileMd5 from '../../utils/get-file-md5';
 
 @Injectable()
@@ -75,6 +77,7 @@ export class ArticalsController {
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard)
   async getArticalsById(@Param() params, @Query() query: ReqGetArticalsById): Promise<ResGetArticalsById> {
     return this.articalModel
       .findById(params.id)
@@ -100,6 +103,7 @@ export class ArticalsController {
   }
 
   @Post()
+  @UseGuards(AuthGuard)
   @UseInterceptors(FileInterceptor('file'))
   async createArticals(
     @UploadedFile() file: MulterFile,
@@ -143,6 +147,7 @@ export class ArticalsController {
   }
 
   @Put(':id')
+  @UseGuards(AuthGuard)
   @UseInterceptors(FileInterceptor('file'))
   async updateArticals(
     @UploadedFile() file: MulterFile,
