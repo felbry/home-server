@@ -1,5 +1,5 @@
 import { BaseAndTimestamp } from '../base.interface';
-export class Afile extends BaseAndTimestamp {
+export class File extends BaseAndTimestamp {
   mimetype: string;
   size: number;
   encoding: string;

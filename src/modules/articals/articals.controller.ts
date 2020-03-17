@@ -36,7 +36,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { InjectModel } from '@nestjs/mongoose';
 import { Artical } from './artical.interface';
-import { Afile } from '../afiles/afile.interface';
+import { File } from '../files/file.interface';
 import { MulterFile } from '../multer-file.interface';
 import { ReqPostArticals } from './dto/post-articals.dto';
 import { ReqPutArticals } from './dto/put-articals.dto';
@@ -49,7 +49,7 @@ import getFileMd5 from '../../utils/get-file-md5';
 export class ArticalsController {
   constructor(
     @InjectModel('Artical') private readonly articalModel: Model<Artical>,
-    @InjectModel('File') private readonly fileModel: Model<Afile>,
+    @InjectModel('File') private readonly fileModel: Model<File>,
   ) {}
 
   @Get()
@@ -108,14 +108,14 @@ export class ArticalsController {
   ): Promise<Artical> {
     let md5: string;
     return getFileMd5(file.buffer)
-      .then((md5Ret: string): Afile | null => {
+      .then((md5Ret: string): File | null => {
         md5 = md5Ret;
         return this.fileModel.findOne({
           md5,
         });
       })
       .then(
-        (fileRet: Afile | null): Afile => {
+        (fileRet: File | null): File => {
           const publicPath: string = `/static/articals/${md5}`;
           if (fileRet) {
             return fileRet;
@@ -132,7 +132,7 @@ export class ArticalsController {
         },
       )
       .then(
-        (fileRet: Afile): Artical => {
+        (fileRet: File): Artical => {
           return this.articalModel.create({
             title: artical.title,
             file: fileRet._id,
@@ -151,14 +151,14 @@ export class ArticalsController {
   ): Promise<Artical> {
     let md5: string;
     return getFileMd5(file.buffer)
-      .then((md5Ret: string): Afile | null => {
+      .then((md5Ret: string): File | null => {
         md5 = md5Ret;
         return this.fileModel.findOne({
           md5,
         });
       })
       .then(
-        (fileRet: Afile | null): Afile => {
+        (fileRet: File | null): File => {
           const publicPath: string = `/static/articals/${md5}`;
           if (fileRet) {
             return fileRet;
@@ -175,7 +175,7 @@ export class ArticalsController {
         },
       )
       .then(
-        (fileRet: Afile): Artical => {
+        (fileRet: File): Artical => {
           return this.articalModel.findByIdAndUpdate(params.id, {
             title: artical.title,
             file: fileRet._id

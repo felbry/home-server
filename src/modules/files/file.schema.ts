@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export const AfileSchema = new mongoose.Schema(
+export const FileSchema = new mongoose.Schema(
   {
     mimetype: String,
     size: Number,
