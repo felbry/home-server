@@ -16,21 +16,19 @@ export class UsersController {
   @Post('login')
   async login(@Body() userInfo: ReqLogin): Promise<ResLogin> {
     const { username, password } = userInfo;
-    const userRet: User | null = await this.userModel
-      .findOne({
-        username,
-        password,
-      })
-      .exec();
+    const userRet: User | null = await this.userModel.findOne({
+      username,
+      password,
+    });
     if (userRet) {
       return {
         token: jwt.sign(
           {
-            uid: userRet._id,
+            id: userRet._id,
           },
           secretKey,
         ),
-      } as ResLogin;
+      };
     } else {
       throw Error('用户名或密码错误');
     }
@@ -39,13 +37,11 @@ export class UsersController {
   @Post('registry')
   async registry(@Body() userInfo: ReqRegistry): Promise<User> {
     const { password, nickName, username } = userInfo;
-    const userRet: User | null = await this.userModel
-      .findOne({
-        username
-      })
-      .exec();
+    const userRet: User | null = await this.userModel.findOne({
+      username,
+    });
     if (userRet) {
-      throw Error('用户已存在')
+      throw Error('用户已存在');
     } else {
       return this.userModel.create({
         username,

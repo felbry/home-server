@@ -1,24 +1,21 @@
 const fs = require('fs');
-const hljs = require('highlight.js')
-const markdownItTocAndAnchor = require('markdown-it-toc-and-anchor').default
-const mdIt = require('markdown-it')
+const hljs = require('highlight.js');
+const markdownItTocAndAnchor = require('markdown-it-toc-and-anchor').default;
+const mdIt = require('markdown-it');
 const md = new mdIt({
   html: true,
-  highlight: function (str, lang) {
+  highlight: function(str, lang) {
     if (lang && hljs.getLanguage(lang)) {
-      return hljs.highlight(lang, str).value
+      return hljs.highlight(lang, str).value;
     }
-    return '' // use external default escaping
-  }
+    return ''; // use external default escaping
+  },
 })
-  .use(
-    markdownItTocAndAnchor,
-    {
-      anchorLink: false,
-      tocLastLevel: 3
-    }
-  )
-  .use(require('markdown-it-footnote'))
+  .use(markdownItTocAndAnchor, {
+    anchorLink: false,
+    tocLastLevel: 3,
+  })
+  .use(require('markdown-it-footnote'));
 import { Model } from 'mongoose';
 import {
   Controller,
@@ -32,7 +29,7 @@ import {
   Param,
   Body,
   Query,
-  UseGuards
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { InjectModel } from '@nestjs/mongoose';
@@ -42,8 +39,14 @@ import { MulterFile } from '../multer-file.interface';
 import { ReqPostArticals } from './dto/post-articals.dto';
 import { ReqPutArticals } from './dto/put-articals.dto';
 import { ReqGetArticals, ResGetArticals } from './dto/get-articals.dto';
-import { ReqGetArticalsById, ResGetArticalsById } from './dto/get-articals-by-id.dto';
-import { AuthGuard } from '../../guards/auth.guard'
+import {
+  ReqGetArticalsById,
+  ResGetArticalsById,
+} from './dto/get-articals-by-id.dto';
+import { AuthGuard } from '../../guards/auth.guard';
+import { RolesGuard } from '../../guards/roles.guard';
+import { Roles } from '../../decorators/roles.decorator';
+import { Role } from '../../constant';
 import getFileMd5 from '../../utils/get-file-md5';
 
 @Injectable()
@@ -78,32 +81,40 @@ export class ArticalsController {
 
   @Get(':id')
   @UseGuards(AuthGuard)
-  async getArticalsById(@Param() params, @Query() query: ReqGetArticalsById): Promise<ResGetArticalsById> {
+  async getArticalsById(
+    @Param() params,
+    @Query() query: ReqGetArticalsById,
+  ): Promise<ResGetArticalsById> {
     return this.articalModel
       .findById(params.id)
       .populate('author', 'gender nickName')
       .populate('file', 'publicPath')
-      .then((articalRet: Artical): ResGetArticalsById => {
-        const retObj: ResGetArticalsById = 
-          {
-            content: fs.readFileSync(process.cwd() + articalRet.file.publicPath, 'utf-8'),
-            ...(articalRet as any)._doc
+      .then(
+        (articalRet: Artical): ResGetArticalsById => {
+          const retObj: ResGetArticalsById = {
+            content: fs.readFileSync(
+              process.cwd() + articalRet.file.publicPath,
+              'utf-8',
+            ),
+            ...(articalRet as any)._doc,
+          };
+          if (query.isOrigin) {
+            return retObj;
           }
-        if (query.isOrigin) {
-          return retObj
-        }
-        md.set({
-          tocCallback: function (tocMarkdown, tocArray, tocHtml) {
-            // console.log(tocHtml)
-          }
-        })
-        retObj.content = md.render(retObj.content, { encoding: 'utf-8' })
-        return retObj
-      })
+          md.set({
+            tocCallback: function(tocMarkdown, tocArray, tocHtml) {
+              // console.log(tocHtml)
+            },
+          });
+          retObj.content = md.render(retObj.content, { encoding: 'utf-8' });
+          return retObj;
+        },
+      );
   }
 
   @Post()
-  @UseGuards(AuthGuard)
+  @Roles([Role.Admin])
+  @UseGuards(AuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('file'))
   async createArticals(
     @UploadedFile() file: MulterFile,
@@ -147,12 +158,13 @@ export class ArticalsController {
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard)
+  @Roles([Role.Admin])
+  @UseGuards(AuthGuard, RolesGuard)
   @UseInterceptors(FileInterceptor('file'))
   async updateArticals(
     @UploadedFile() file: MulterFile,
     @Param() params,
-    @Body() artical: ReqPutArticals
+    @Body() artical: ReqPutArticals,
   ): Promise<Artical> {
     let md5: string;
     return getFileMd5(file.buffer)
@@ -183,8 +195,8 @@ export class ArticalsController {
         (fileRet: File): Artical => {
           return this.articalModel.findByIdAndUpdate(params.id, {
             title: artical.title,
-            file: fileRet._id
-          })
+            file: fileRet._id,
+          });
         },
       );
   }
