@@ -9,7 +9,7 @@ import { AppController } from './app.controller';
   imports: [
     MongooseModule.forRoot('mongodb://localhost:27017/nest'),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '../../home-fe/dist'),
+      rootPath: join(__dirname, '../../home-fe'),
     }),
     ArticalsModule,
     UsersModule,
