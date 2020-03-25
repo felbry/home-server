@@ -5,7 +5,7 @@ name: deploy-server
 # Controls when the action will run. Triggers the workflow on push or pull request 
 # events but only for the master branch
 on:
-  push:
+  pull_request:
     branches: [ master ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -26,7 +26,7 @@ jobs:
       uses: easingthemes/ssh-deploy@v2.0.7
       env:
         SSH_PRIVATE_KEY: ${{ secrets.KEY }}
-        ARGS: "-avz --delete"
+        ARGS: "-avz --delete --exclude 'node_modules'"
         SOURCE: "./"
         REMOTE_HOST: ${{ secrets.HOST }}
         REMOTE_USER: ${{ secrets.USER }}
